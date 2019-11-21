@@ -1,0 +1,27 @@
+material Watchlib
+
+type Time = Time(Int, Int, Int)
+
+type OptTime = SomeT(Time) | NoneT
+
+func incTime(time : Time) =
+  time of:
+    Time(23, 59, 59) -> Time(0, 0, 0)
+    Time(h, 59, 59) -> Time(h+1, 0, 0)
+    Time(h, m, 59) -> Time(h, m+1, 0)
+    Time(h, m, s) -> Time(h, m, s+1)
+
+func addTime(time : Time, dh : Int, dm : Int, ds : Int) =
+  time of:
+    Time(h,m,s) -> Time((h + dh) % 24, (m + dm) % 60, (s + ds) % 60)
+
+type Button = Button(Bool,Bool,Bool)
+
+func buttonA(button : Button) =
+  button of Button(a, _, _) -> a
+
+func buttonB(button : Button) =
+  button of Button(_, b, _) -> b
+
+func buttonC(button : Button) =
+  button of Button(_, _, c) -> c

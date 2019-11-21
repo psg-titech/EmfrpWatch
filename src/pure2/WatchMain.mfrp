@@ -1,0 +1,13 @@
+module WatchMain
+in buttonA(False) : Bool,
+   buttonB(False) : Bool,
+   buttonC(False) : Bool,
+   elapsed(0) : Int
+out hour : Int, min : Int, sec : Int
+use Std, Watchlib
+
+node button = Button(buttonA, buttonB, buttonC)
+
+newnode display = Watch(button, elapsed)
+
+node Time(hour, min, sec) = display

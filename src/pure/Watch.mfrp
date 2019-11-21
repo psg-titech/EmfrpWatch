@@ -1,0 +1,54 @@
+module Watch
+in button : Button,
+   elapsed(0) : Int
+out display : Time
+use Std, Watchlib
+
+type SetPos = Sec | Min | Hour
+type Mode = Display | Set(SetPos)
+
+node dt = elapsed - elapsed@last
+
+node init[0] counterCLK =
+  (counterCLK@last + dt) % 1000
+
+node pulseCLK = counterCLK@last > counterCLK
+
+node curTimeUpdate : OptTime =
+  mode@last of:
+    Set(Sec) -> if buttonA(button) then
+                  SomeT(display)
+                else NoneT
+    _ -> NoneT
+
+node init[Time(0,0,0)] curTime =
+  curTimeUpdate of:
+    SomeT(t) -> t
+    _ -> if pulseCLK then
+           incTime(curTime@last)
+         else curTime@last
+
+node dh =
+  mode@last of Set(Hour) -> 1, _ -> 0
+
+node dm =
+  mode@last of Set(Min) -> 1, _ -> 0
+
+node ds =
+  mode@last of Set(Sec) -> 1, _ -> 0
+
+node init[Time(0,0,0)] display =
+  mode@last of:
+    Display -> curTime@last
+    Set(_) -> if buttonB(button) then
+                addTime(display@last, dh, dm, ds)
+              else display@last
+
+node init[Display] mode =
+  if buttonA(button) then
+    mode@last of
+      Display -> Set(Hour),
+      Set(Hour) -> Set(Min),
+      Set(Min) -> Set(Sec),
+      Set(Sec) -> Display
+   else mode@last

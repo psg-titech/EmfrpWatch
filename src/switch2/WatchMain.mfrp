@@ -1,0 +1,31 @@
+module WatchMain
+in buttonA(False) : Bool,
+   buttonB(False) : Bool,
+   buttonC(False) : Bool,
+   elapsed(0) : Int
+out hour : Int, min : Int, sec : Int
+use Std, Watchlib
+
+node button = Button(buttonA, buttonB, buttonC)
+
+node init[0] dt = elapsed - elapsed@last
+
+newnode display, curTimeUpdate =
+  Watch(button, curTime@last, dt)
+
+node init[0] hour = display of Time(h, _, _) -> h
+node init[0] min = display of Time(_, m, _) -> m
+node init[0] sec = display of Time(_, _, s) -> s
+
+node init[0] counterCLK =
+  (counterCLK@last + dt) % 1000
+
+node init[False] pulseCLK = counterCLK@last > counterCLK
+
+node init[Time(0,0,0)] curTime =
+  curTimeUpdate of
+    SomeT(t) -> t,
+    _ -> if pulseCLK then
+           incTime(curTime@last)
+         else curTime@last
+

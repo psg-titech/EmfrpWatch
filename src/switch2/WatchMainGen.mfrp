@@ -1,0 +1,304 @@
+module WatchMain
+in buttonA(False) : Bool,
+   buttonB(False) : Bool,
+   buttonC(False) : Bool,
+   elapsed(0) : Int
+out hour : Int,
+    min : Int,
+    sec : Int
+use Std, Watchlib
+
+node button = Button(buttonA, buttonB, buttonC)
+
+node init[0] dt = (elapsed - elapsed@last)
+
+type Watch2_State_2 =
+  Watch2_Display_2 | Watch2_Set_2(Watch2_SetPos_2) | Watch2_StopWatch_2
+
+type Watch2_SetPos_2 = Watch2_Hour_2 | Watch2_Min_2 | Watch2_Sec_2
+
+type Watch2_StopWatch1_State_1_2 =
+  Watch2_StopWatch1_Stop_1_2 | Watch2_StopWatch1_Run_1_2
+
+node init[Button(False, False, False)] watch2_button_2 = button
+
+node init[Time(0, 0, 0)] watch2_curTime_2 = curTime@last
+
+node init[0] watch2_dt_2 = dt
+
+node init[Time(0, 0, 0)] watch2_display_display_2 =
+  watch2_state_2@last of:
+    Watch2_Display_2 -> watch2_curTime_2
+    _ -> watch2_display_2@last
+
+node init[NoneT] watch2_display_curTimeUpdate_2 =
+  watch2_state_2@last of:
+    Watch2_Display_2 -> NoneT
+    _ -> watch2_curTimeUpdate_2@last
+
+node init[Watch2_Display_2] watch2_display_state_2 =
+  watch2_state_2@last of:
+    Watch2_Display_2 -> (if buttonA(watch2_button_2) then
+                         Watch2_Set_2(Watch2_Hour_2)
+                         else (if buttonC(watch2_button_2) then
+                               Watch2_StopWatch_2 else watch2_state_2@last))
+    _ -> watch2_state_2@last
+
+node init[0] watch2_set_dh_2 =
+  watch2_state_2@last of:
+    Watch2_Set_2(pos) -> pos of:
+                           Watch2_Hour_2 -> 1
+                           _ -> 0
+    _ -> watch2_set_dh_2@last
+
+node init[0] watch2_set_dm_2 =
+  watch2_state_2@last of:
+    Watch2_Set_2(pos) -> pos of:
+                           Watch2_Min_2 -> 1
+                           _ -> 0
+    _ -> watch2_set_dm_2@last
+
+node init[0] watch2_set_ds_2 =
+  watch2_state_2@last of:
+    Watch2_Set_2(pos) -> pos of:
+                           Watch2_Sec_2 -> 1
+                           _ -> 0
+    _ -> watch2_set_ds_2@last
+
+node init[Time(0, 0, 0)] watch2_set_display_2 =
+  watch2_state_2@last of:
+    Watch2_Set_2(pos) -> (if buttonB(watch2_button_2) then
+                          addTime(watch2_display_2@last, watch2_set_dh_2,
+                                  watch2_set_dm_2, watch2_set_ds_2)
+                          else watch2_display_2@last)
+    _ -> watch2_display_2@last
+
+node init[NoneT] watch2_set_curTimeUpdate_2 =
+  watch2_state_2@last of:
+    Watch2_Set_2(pos) -> pos of:
+                           Watch2_Sec_2 -> (if buttonA(watch2_button_2) then
+                                            SomeT(watch2_set_display_2)
+                                            else NoneT)
+                           _ -> NoneT
+    _ -> watch2_curTimeUpdate_2@last
+
+node init[Watch2_Display_2] watch2_set_state_2 =
+  watch2_state_2@last of:
+    Watch2_Set_2(pos) -> (if buttonA(watch2_button_2) then
+                          pos of:
+                            Watch2_Hour_2 -> Watch2_Set_2(Watch2_Min_2)
+                            Watch2_Min_2 -> Watch2_Set_2(Watch2_Sec_2)
+                            Watch2_Sec_2 -> Watch2_Display_2
+                          else watch2_state_2@last)
+    _ -> watch2_state_2@last
+
+node init[Button(False, False, False)] watch2_stopWatch_stopWatch1_button_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_button_2
+    _ -> watch2_stopWatch_stopWatch1_button_1_2@last
+
+node init[0] watch2_stopWatch_stopWatch1_dt_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_dt_2
+    _ -> watch2_stopWatch_stopWatch1_dt_1_2@last
+
+node init[Time(0, 0, 0)] watch2_stopWatch_stopWatch1_stop_stopWatch_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Stop_1_2 -> (if buttonA(
+                                                           watch2_stopWatch_stopWatch1_button_1_2) then
+                                                           Time(0, 0, 0)
+                                                           else watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2)
+                            _ -> watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_stop_stopWatch_1_2@last
+
+node init[False] watch2_stopWatch_stopWatch1_stop_exit_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Stop_1_2 -> buttonC(watch2_stopWatch_stopWatch1_button_1_2)
+                            _ -> watch2_stopWatch_stopWatch1_exit_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_stop_exit_1_2@last
+
+node init[Watch2_StopWatch1_Stop_1_2] watch2_stopWatch_stopWatch1_stop_state_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Stop_1_2 -> (if buttonB(
+                                                           watch2_stopWatch_stopWatch1_button_1_2) then
+                                                           Watch2_StopWatch1_Run_1_2
+                                                           else watch2_stopWatch_stopWatch1_state_1_atlast_2)
+                            _ -> watch2_stopWatch_stopWatch1_state_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_stop_state_1_2@last
+
+node init[0] watch2_stopWatch_stopWatch1_run_counterSW_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Run_1_2 -> ((watch2_stopWatch_stopWatch1_run_counterSW_atlast_1_2
+                                                           + watch2_stopWatch_stopWatch1_dt_1_2)
+                                                          % 1000)
+                            _ -> watch2_stopWatch_stopWatch1_run_counterSW_atlast_1_2
+    _ -> watch2_stopWatch_stopWatch1_run_counterSW_1_atlast_2
+
+node init[0] watch2_stopWatch_stopWatch1_run_counterSW_1_atlast_2 =
+  (if watch2_switch_2@last then 0
+   else watch2_stopWatch_stopWatch1_run_counterSW_1_2@last)
+
+node init[0] watch2_stopWatch_stopWatch1_run_counterSW_atlast_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> (if watch2_stopWatch_stopWatch1_switch_1_atlast_2 then
+                           0
+                           else watch2_stopWatch_stopWatch1_run_counterSW_1_atlast_2)
+    _ -> watch2_stopWatch_stopWatch1_run_counterSW_atlast_1_2@last
+
+node init[False] watch2_stopWatch_stopWatch1_run_pulseSW_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Run_1_2 -> (watch2_stopWatch_stopWatch1_run_counterSW_atlast_1_2
+                                                          > watch2_stopWatch_stopWatch1_run_counterSW_1_2)
+                            _ -> watch2_stopWatch_stopWatch1_run_pulseSW_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_run_pulseSW_1_atlast_2
+
+node init[False] watch2_stopWatch_stopWatch1_run_pulseSW_1_atlast_2 =
+  (if watch2_switch_2@last then False
+   else watch2_stopWatch_stopWatch1_run_pulseSW_1_2@last)
+
+node init[Time(0, 0, 0)] watch2_stopWatch_stopWatch1_run_stopWatch_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Run_1_2 -> (if watch2_stopWatch_stopWatch1_run_pulseSW_1_2 then
+                                                          incTime(watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2)
+                                                          else watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2)
+                            _ -> watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_run_stopWatch_1_2@last
+
+node init[False] watch2_stopWatch_stopWatch1_run_exit_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Run_1_2 -> False
+                            _ -> watch2_stopWatch_stopWatch1_exit_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_run_exit_1_2@last
+
+node init[Watch2_StopWatch1_Stop_1_2] watch2_stopWatch_stopWatch1_run_state_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Run_1_2 -> (if buttonB(
+                                                          watch2_stopWatch_stopWatch1_button_1_2) then
+                                                          Watch2_StopWatch1_Stop_1_2
+                                                          else watch2_stopWatch_stopWatch1_state_1_atlast_2)
+                            _ -> watch2_stopWatch_stopWatch1_state_1_atlast_2
+    _ -> watch2_stopWatch_stopWatch1_run_state_1_2@last
+
+node init[Time(0, 0, 0)] watch2_stopWatch_stopWatch1_stopWatch_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Stop_1_2 -> watch2_stopWatch_stopWatch1_stop_stopWatch_1_2
+                            Watch2_StopWatch1_Run_1_2 -> watch2_stopWatch_stopWatch1_run_stopWatch_1_2
+    _ -> watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2
+
+node init[Time(0, 0, 0)] watch2_stopWatch_stopWatch1_stopWatch_1_atlast_2 =
+  (if watch2_switch_2@last then Time(0, 0, 0)
+   else watch2_stopWatch_stopWatch1_stopWatch_1_2@last)
+
+node init[False] watch2_stopWatch_stopWatch1_exit_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Stop_1_2 -> watch2_stopWatch_stopWatch1_stop_exit_1_2
+                            Watch2_StopWatch1_Run_1_2 -> watch2_stopWatch_stopWatch1_run_exit_1_2
+    _ -> watch2_stopWatch_stopWatch1_exit_1_atlast_2
+
+node init[False] watch2_stopWatch_stopWatch1_exit_1_atlast_2 =
+  (if watch2_switch_2@last then False
+   else watch2_stopWatch_stopWatch1_exit_1_2@last)
+
+node init[Watch2_StopWatch1_Stop_1_2] watch2_stopWatch_stopWatch1_state_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_state_1_atlast_2 of:
+                            Watch2_StopWatch1_Stop_1_2 -> watch2_stopWatch_stopWatch1_stop_state_1_2
+                            Watch2_StopWatch1_Run_1_2 -> watch2_stopWatch_stopWatch1_run_state_1_2
+    _ -> watch2_stopWatch_stopWatch1_state_1_atlast_2
+
+node init[Watch2_StopWatch1_Stop_1_2] watch2_stopWatch_stopWatch1_state_1_atlast_2 =
+  (if watch2_switch_2@last then Watch2_StopWatch1_Stop_1_2
+   else watch2_stopWatch_stopWatch1_state_1_2@last)
+
+node init[True] watch2_stopWatch_stopWatch1_switch_1_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> (watch2_stopWatch_stopWatch1_state_1_atlast_2,
+                           watch2_stopWatch_stopWatch1_state_1_2) of:
+                            (Watch2_StopWatch1_Stop_1_2,
+                             Watch2_StopWatch1_Stop_1_2) -> False
+                            (Watch2_StopWatch1_Run_1_2,
+                             Watch2_StopWatch1_Run_1_2) -> False
+                            (_, _) -> True
+    _ -> watch2_stopWatch_stopWatch1_switch_1_atlast_2
+
+node init[True] watch2_stopWatch_stopWatch1_switch_1_atlast_2 =
+  (if watch2_switch_2@last then True
+   else watch2_stopWatch_stopWatch1_switch_1_2@last)
+
+node init[Time(0, 0, 0)] watch2_stopWatch_display_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_stopWatch_1_2
+    _ -> watch2_display_2@last
+
+node init[False] watch2_stopWatch_exit_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> watch2_stopWatch_stopWatch1_exit_1_2
+    _ -> watch2_stopWatch_exit_2@last
+
+node init[NoneT] watch2_stopWatch_curTimeUpdate_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> NoneT
+    _ -> watch2_curTimeUpdate_2@last
+
+node init[Watch2_Display_2] watch2_stopWatch_state_2 =
+  watch2_state_2@last of:
+    Watch2_StopWatch_2 -> (if watch2_stopWatch_exit_2 then Watch2_Display_2
+                           else watch2_state_2@last)
+    _ -> watch2_state_2@last
+
+node init[Time(0, 0, 0)] watch2_display_2 =
+  watch2_state_2@last of:
+    Watch2_Display_2 -> watch2_display_display_2
+    Watch2_Set_2(_) -> watch2_set_display_2
+    Watch2_StopWatch_2 -> watch2_stopWatch_display_2
+
+node init[NoneT] watch2_curTimeUpdate_2 =
+  watch2_state_2@last of:
+    Watch2_Display_2 -> watch2_display_curTimeUpdate_2
+    Watch2_Set_2(_) -> watch2_set_curTimeUpdate_2
+    Watch2_StopWatch_2 -> watch2_stopWatch_curTimeUpdate_2
+
+node init[Watch2_Display_2] watch2_state_2 =
+  watch2_state_2@last of:
+    Watch2_Display_2 -> watch2_display_state_2
+    Watch2_Set_2(_) -> watch2_set_state_2
+    Watch2_StopWatch_2 -> watch2_stopWatch_state_2
+
+node init[True] watch2_switch_2 =
+  (watch2_state_2@last, watch2_state_2) of:
+    (Watch2_Display_2, Watch2_Display_2) -> False
+    (Watch2_Set_2(_), Watch2_Set_2(_)) -> False
+    (Watch2_StopWatch_2, Watch2_StopWatch_2) -> False
+    (_, _) -> True
+
+node init[Time(0, 0, 0)] display = watch2_display_2
+
+node init[NoneT] curTimeUpdate = watch2_curTimeUpdate_2
+
+node init[0] hour = display of:
+                      Time(h, _, _) -> h
+
+node init[0] min = display of:
+                     Time(_, m, _) -> m
+
+node init[0] sec = display of:
+                     Time(_, _, s) -> s
+
+node init[0] counterCLK = ((counterCLK@last + dt) % 1000)
+
+node init[False] pulseCLK = (counterCLK@last > counterCLK)
+
+node init[Time(0, 0, 0)] curTime =
+  curTimeUpdate of:
+    SomeT(t) -> t
+    _ -> (if pulseCLK then incTime(curTime@last) else curTime@last)

@@ -1,0 +1,50 @@
+switchmodule Watch
+in button(Button(False,False,False)) : Button,
+   curTime(Time(0,0,0)) : Time
+out display(Time(0,0,0)) : Time,
+    curTimeUpdate(NoneT) : OptTime
+use Std, Watchlib
+init Display
+
+type SetPos = Hour | Min | Sec
+
+state Display {
+  node display = curTime
+  node curTimeUpdate = NoneT
+
+  switch:
+    if buttonA(button) then
+      Set(Hour)
+    else Retain
+}
+
+state Set(pos : SetPos) {
+  node init[0] dh =
+    pos of Hour -> 1, _ -> 0
+
+  node init[0] dm =
+    pos of Min -> 1, _ -> 0
+
+  node init[0] ds =
+    pos of Sec -> 1, _ -> 0
+
+  node display =
+    if buttonB(button) then
+      addTime(display@last, dh, dm, ds)
+    else Retain
+
+  node curTimeUpdate =
+    pos of
+      Sec -> if buttonA(button) then
+               SomeT(display)
+             else NoneT,
+    _ -> NoneT
+
+  switch:
+    if buttonA(button) then
+      pos of
+        Hour -> Set(Min),
+        Min -> Set(Sec),
+        Sec -> Display
+    else Retain
+}

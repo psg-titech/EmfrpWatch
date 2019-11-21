@@ -1,0 +1,128 @@
+module WatchMain
+in buttonA(False) : Bool,
+   buttonB(False) : Bool,
+   buttonC(False) : Bool,
+   elapsed(0) : Int
+out hour : Int,
+    min : Int,
+    sec : Int
+use Std, Watchlib
+
+node button = Button(buttonA, buttonB, buttonC)
+
+node init[0] dt = (elapsed - elapsed@last)
+
+type Watch1_State_1 = Watch1_Display_1 | Watch1_Set_1(Watch1_SetPos_1)
+
+type Watch1_SetPos_1 = Watch1_Hour_1 | Watch1_Min_1 | Watch1_Sec_1
+
+node init[Button(False, False, False)] watch1_button_1 = button
+
+node init[Time(0, 0, 0)] watch1_curTime_1 = curTime@last
+
+node init[Time(0, 0, 0)] watch1_display_display_1 =
+  watch1_state_1@last of:
+    Watch1_Display_1 -> watch1_curTime_1
+    _ -> watch1_display_1@last
+
+node init[NoneT] watch1_display_curTimeUpdate_1 =
+  watch1_state_1@last of:
+    Watch1_Display_1 -> NoneT
+    _ -> watch1_curTimeUpdate_1@last
+
+node init[Watch1_Display_1] watch1_display_state_1 =
+  watch1_state_1@last of:
+    Watch1_Display_1 -> (if buttonA(watch1_button_1) then
+                         Watch1_Set_1(Watch1_Hour_1) else watch1_state_1@last)
+    _ -> watch1_state_1@last
+
+node init[0] watch1_set_dh_1 =
+  watch1_state_1@last of:
+    Watch1_Set_1(pos) -> pos of:
+                           Watch1_Hour_1 -> 1
+                           _ -> 0
+    _ -> watch1_set_dh_1@last
+
+node init[0] watch1_set_dm_1 =
+  watch1_state_1@last of:
+    Watch1_Set_1(pos) -> pos of:
+                           Watch1_Min_1 -> 1
+                           _ -> 0
+    _ -> watch1_set_dm_1@last
+
+node init[0] watch1_set_ds_1 =
+  watch1_state_1@last of:
+    Watch1_Set_1(pos) -> pos of:
+                           Watch1_Sec_1 -> 1
+                           _ -> 0
+    _ -> watch1_set_ds_1@last
+
+node init[Time(0, 0, 0)] watch1_set_display_1 =
+  watch1_state_1@last of:
+    Watch1_Set_1(pos) -> (if buttonB(watch1_button_1) then
+                          addTime(watch1_display_1@last, watch1_set_dh_1,
+                                  watch1_set_dm_1, watch1_set_ds_1)
+                          else watch1_display_1@last)
+    _ -> watch1_display_1@last
+
+node init[NoneT] watch1_set_curTimeUpdate_1 =
+  watch1_state_1@last of:
+    Watch1_Set_1(pos) -> pos of:
+                           Watch1_Sec_1 -> (if buttonA(watch1_button_1) then
+                                            SomeT(watch1_set_display_1)
+                                            else NoneT)
+                           _ -> NoneT
+    _ -> watch1_curTimeUpdate_1@last
+
+node init[Watch1_Display_1] watch1_set_state_1 =
+  watch1_state_1@last of:
+    Watch1_Set_1(pos) -> (if buttonA(watch1_button_1) then
+                          pos of:
+                            Watch1_Hour_1 -> Watch1_Set_1(Watch1_Min_1)
+                            Watch1_Min_1 -> Watch1_Set_1(Watch1_Sec_1)
+                            Watch1_Sec_1 -> Watch1_Display_1
+                          else watch1_state_1@last)
+    _ -> watch1_state_1@last
+
+node init[Time(0, 0, 0)] watch1_display_1 =
+  watch1_state_1@last of:
+    Watch1_Display_1 -> watch1_display_display_1
+    Watch1_Set_1(_) -> watch1_set_display_1
+
+node init[NoneT] watch1_curTimeUpdate_1 =
+  watch1_state_1@last of:
+    Watch1_Display_1 -> watch1_display_curTimeUpdate_1
+    Watch1_Set_1(_) -> watch1_set_curTimeUpdate_1
+
+node init[Watch1_Display_1] watch1_state_1 =
+  watch1_state_1@last of:
+    Watch1_Display_1 -> watch1_display_state_1
+    Watch1_Set_1(_) -> watch1_set_state_1
+
+node init[True] watch1_switch_1 =
+  (watch1_state_1@last, watch1_state_1) of:
+    (Watch1_Display_1, Watch1_Display_1) -> False
+    (Watch1_Set_1(_), Watch1_Set_1(_)) -> False
+    (_, _) -> True
+
+node init[Time(0, 0, 0)] display = watch1_display_1
+
+node init[NoneT] curTimeUpdate = watch1_curTimeUpdate_1
+
+node init[0] hour = display of:
+                      Time(h, _, _) -> h
+
+node init[0] min = display of:
+                     Time(_, m, _) -> m
+
+node init[0] sec = display of:
+                     Time(_, _, s) -> s
+
+node init[0] counterCLK = ((counterCLK@last + dt) % 1000)
+
+node init[False] pulseCLK = (counterCLK@last > counterCLK)
+
+node init[Time(0, 0, 0)] curTime =
+  curTimeUpdate of:
+    SomeT(t) -> t
+    _ -> (if pulseCLK then incTime(curTime@last) else curTime@last)
