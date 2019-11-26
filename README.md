@@ -1,6 +1,6 @@
 # SIGPRO126_emfrp_samples
 These are implementations for a digital watch example written in Emfrp / switch-extended Emfrp.  
-These examples are created to evaluate switch-extension for Emfrp.
+These samples are created to evaluate switch-extension for Emfrp.
 
 * `src/pure` : exapmle code written in original Emfrp
 * `src/pure2` : extended version of `pure`
