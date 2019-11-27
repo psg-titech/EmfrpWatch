@@ -1,4 +1,4 @@
-# SIGPRO126_emfrp_samples
+# EmfrpWatch
 These are implementations for a digital watch example written in Emfrp / switch-extended Emfrp.  
 These samples are created to evaluate switch-extension for Emfrp.
 
